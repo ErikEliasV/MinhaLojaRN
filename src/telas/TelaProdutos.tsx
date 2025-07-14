@@ -11,12 +11,14 @@ import {
 } from "react-native";
 import { obterTodosProdutos } from "../servicos/servicoProdutos";
 import { ProdutoAPI } from "../tipos/api"; // Reutilize a interface
+import { useNavigation } from "@react-navigation/native";
 
 interface TelaProdutosProps {
   aoLogout: () => void;
 }
 
 export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
+  const navegacao = useNavigation(); // Adicione esta linha
   const [listaProdutos, setListaProdutos] = useState<ProdutoAPI[]>([]);
   const [produtosFiltrados, setProdutosFiltrados] = useState<ProdutoAPI[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
@@ -59,17 +61,23 @@ export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
       setProdutosFiltrados(produtosEncontrados);
     }
   }, [termoBusca, listaProdutos]); // Dependências: termoBusca e listaProdutos
-  // ... (restante do seu componente, incluindo o TextInput para busca)
-
+  
   const renderizarItemProduto = ({ item }: { item: ProdutoAPI }) => (
-    <View style={estilos.itemProduto}>
+    <TouchableOpacity
+      style={estilos.itemProduto}
+      onPress={() =>
+        navegacao.navigate("DetalhesProduto", { produtoId: item.id })
+        // O alerta acima não interfere no funcionamento da aplicação.
+        // Trata-se apenas de um alerta de tipagem, mas é um código válido para execução.
+      }
+    >
       <Image source={{ uri: item.image }} style={estilos.imagemProduto} />
       <View style={estilos.detalhesProduto}>
         <Text style={estilos.tituloProduto}>{item.title}</Text>
         <Text style={estilos.categoriaProduto}>{item.category}</Text>
         <Text style={estilos.precoProduto}>R$ {item.price.toFixed(2)}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (carregandoProdutos) {

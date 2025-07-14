@@ -1,43 +1,41 @@
 import axios from "axios";
-import { obterToken, removerToken } from "../servicos/servicoArmazenamento"; // Serácriado no Passo 2
+import { obterToken, removerToken } from "../servicos/servicoArmazenamento";
 
 const api = axios.create({
-  baseURL: "https://fakestoreapi.com/", // URL base da Fake Store API
-  timeout: 10000, // Tempo limite da requisição em ms
+  baseURL: "https://fakestoreapi.com/", // URL base para todas as requisições da API.
+  timeout: 10000, // Tempo limite (em ms) para as requisições HTTP.
   headers: {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json", // Define o tipo de conteúdo padrão para JSON.
   },
 });
 
-// Interceptor de requisição: Adiciona o token
+// Interceptor de requisição: Adiciona o token de autorização antes de cada requisição.
 api.interceptors.request.use(
   async (config) => {
-    const token = await obterToken(); // Obtém o token armazenado
+    const token = await obterToken(); // Obtém o token armazenado localmente.
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`; // Adiciona o token ao cabeçalho de autorização.
     }
-    return config;
+    return config; // Retorna a configuração da requisição modificada.
   },
   (erro) => {
-    return Promise.reject(erro);
+    return Promise.reject(erro); // Rejeita a promessa em caso de erro na requisição.
   }
 );
 
-// Interceptor de resposta: Lida com tokens expirados (erro 401)
+// Interceptor de resposta: Lida com respostas da API, especialmente erros 401 (Não Autorizado).
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response, // Se a resposta for bem-sucedida, retorna-a sem modificação.
   async (erro) => {
+    // Verifica se o erro é uma resposta HTTP e se o status é 401.
     if (erro.response && erro.response.status === 401) {
-      // Se o token for inválido/expirado, remove-o e pode forçar o logout
+      // Se o token for inválido ou expirado (erro 401), remove-o do armazenamento local.
       await removerToken();
-      // Sugestão: Você pode adicionar uma lógica aqui para redirecionar para a telade login
-      // ou emitir um evento global para notificar o App.tsx.
-      console.warn(
-        "Token de autenticação expirado ou inválido. Realize o login novamente."
-      );
+      // Em um cenário real, você poderia disparar um evento global para forçar o logout e redirecionar o usuário.
+      console.warn("Token de autenticação expirado ou inválido. Realize o login novamente.");
     }
-    return Promise.reject(erro);
+    return Promise.reject(erro); // Rejeita a promessa para propagar o erro.
   }
 );
 
-export default api;
+export default api; // Exporta a instância configurada do Axios para uso em outros módulos.

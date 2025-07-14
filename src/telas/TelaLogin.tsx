@@ -10,32 +10,38 @@ import {
 import { realizarLogin } from "../servicos/servicoAutenticacao";
 import { salvarToken } from "../servicos/servicoArmazenamento";
 
+// Define as propriedades esperadas para o componente TelaLogin.
 interface TelaLoginProps {
-  aoLoginSucesso: () => void; // Função para notificar o App.tsx do sucesso
+  aoLoginSucesso: () => void; // Função de callback para notificar o componente pai sobre o sucesso do login.
 }
 
 export default function TelaLogin({ aoLoginSucesso }: TelaLoginProps) {
-  const [nomeUsuario, setNomeUsuario] = useState("");
-  const [senhaUsuario, setSenhaUsuario] = useState("");
-  const [carregando, setCarregando] = useState(false);
-  const [mensagemErro, setMensagemErro] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState(""); // Estado para armazenar o nome de usuário digitado.
+  const [senhaUsuario, setSenhaUsuario] = useState(""); // Estado para armazenar a senha digitada.
+  const [carregando, setCarregando] = useState(false); // Estado para controlar o indicador de carregamento.
+  const [mensagemErro, setMensagemErro] = useState(""); // Estado para exibir mensagens de erro.
+
+  // Função assíncrona para lidar com o processo de login.
   const lidarComLogin = async () => {
-    setCarregando(true);
-    setMensagemErro("");
+    setCarregando(true); // Ativa o indicador de carregamento.
+    setMensagemErro(""); // Limpa qualquer mensagem de erro anterior.
+
     try {
-      // Credenciais de teste da Fake Store API: 'mor_2314' e '83r5^_'(senha)
+      // Credenciais de teste da Fake Store API: 'mor_2314' (usuário) e '83r5^' (senha)
       const resposta = await realizarLogin({
         usuario: nomeUsuario,
         senha: senhaUsuario,
       });
-      await salvarToken(resposta.token);
-      aoLoginSucesso();
+      await salvarToken(resposta.token); // Salva o token de autenticação recebido.
+      aoLoginSucesso(); // Chama a função de callback para indicar o sucesso do login.
     } catch (erro: any) {
+      // Captura e exibe mensagens de erro em caso de falha no login.
       setMensagemErro(erro.message || "Erro inesperado. Tente novamente.");
     } finally {
-      setCarregando(false);
+      setCarregando(false); // Desativa o indicador de carregamento, independentemente do resultado.
     }
   };
+
   return (
     <View style={estilos.container}>
       <Text style={estilos.titulo}>Login</Text>
@@ -44,28 +50,29 @@ export default function TelaLogin({ aoLoginSucesso }: TelaLoginProps) {
         placeholder="Nome de Usuário"
         value={nomeUsuario}
         onChangeText={setNomeUsuario}
-        autoCapitalize="none"
+        autoCapitalize="none" // Desabilita a capitalização automática.
       />
       <TextInput
         style={estilos.input}
         placeholder="Senha"
         value={senhaUsuario}
         onChangeText={setSenhaUsuario}
-        secureTextEntry
+        secureTextEntry // Oculta o texto digitado para senhas.
       />
       {carregando ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" /> // Exibe o indicador de carregamento enquanto o login está em andamento.
       ) : (
         <TouchableOpacity
           style={estilos.botao}
           onPress={lidarComLogin}
+          // Desabilita o botão se o nome de usuário ou a senha estiverem vazios.
           disabled={!nomeUsuario || !senhaUsuario}
         >
           <Text style={estilos.textoBotao}>Entrar</Text>
         </TouchableOpacity>
       )}
       {mensagemErro ? (
-        <Text style={estilos.mensagemErro}>{mensagemErro}</Text>
+        <Text style={estilos.mensagemErro}>{mensagemErro}</Text> // Exibe a mensagem de erro, se houver.
       ) : null}
     </View>
   );
@@ -90,10 +97,11 @@ const estilos = StyleSheet.create({
   botao: {
     width: "100%",
     padding: 15,
+    backgroundColor: "#007bff", // Cor de fundo do botão.
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
   },
-  textoBotao: { fontSize: 16 },
-  mensagemErro: { marginTop: 15, textAlign: "center" },
+  textoBotao: { color: "#fff", fontSize: 16 }, // Cor do texto do botão.
+  mensagemErro: { marginTop: 15, textAlign: "center", color: "red" }, // Estilo para mensagens de erro.
 });
