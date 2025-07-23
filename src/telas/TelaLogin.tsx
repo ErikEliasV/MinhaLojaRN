@@ -6,102 +6,205 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  ImageBackground,
+  Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 import { realizarLogin } from "../servicos/servicoAutenticacao";
 import { salvarToken } from "../servicos/servicoArmazenamento";
 
-// Define as propriedades esperadas para o componente TelaLogin.
 interface TelaLoginProps {
-  aoLoginSucesso: () => void; // Função de callback para notificar o componente pai sobre o sucesso do login.
+  aoLoginSucesso: () => void;
 }
 
 export default function TelaLogin({ aoLoginSucesso }: TelaLoginProps) {
-  const [nomeUsuario, setNomeUsuario] = useState(""); // Estado para armazenar o nome de usuário digitado.
-  const [senhaUsuario, setSenhaUsuario] = useState(""); // Estado para armazenar a senha digitada.
-  const [carregando, setCarregando] = useState(false); // Estado para controlar o indicador de carregamento.
-  const [mensagemErro, setMensagemErro] = useState(""); // Estado para exibir mensagens de erro.
+  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [senhaUsuario, setSenhaUsuario] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [mensagemErro, setMensagemErro] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  // Função assíncrona para lidar com o processo de login.
   const lidarComLogin = async () => {
-    setCarregando(true); // Ativa o indicador de carregamento.
-    setMensagemErro(""); // Limpa qualquer mensagem de erro anterior.
+    setCarregando(true);
+    setMensagemErro("");
 
     try {
-      // Credenciais de teste da Fake Store API: 'mor_2314' (usuário) e '83r5^' (senha)
       const resposta = await realizarLogin({
         usuario: nomeUsuario,
         senha: senhaUsuario,
       });
-      await salvarToken(resposta.token); // Salva o token de autenticação recebido.
-      aoLoginSucesso(); // Chama a função de callback para indicar o sucesso do login.
+      await salvarToken(resposta.token);
+      aoLoginSucesso();
     } catch (erro: any) {
-      // Captura e exibe mensagens de erro em caso de falha no login.
       setMensagemErro(erro.message || "Erro inesperado. Tente novamente.");
     } finally {
-      setCarregando(false); // Desativa o indicador de carregamento, independentemente do resultado.
+      setCarregando(false);
     }
   };
 
   return (
     <View style={estilos.container}>
-      <Text style={estilos.titulo}>Login</Text>
-      <TextInput
-        style={estilos.input}
-        placeholder="Nome de Usuário"
-        value={nomeUsuario}
-        onChangeText={setNomeUsuario}
-        autoCapitalize="none" // Desabilita a capitalização automática.
-      />
-      <TextInput
-        style={estilos.input}
-        placeholder="Senha"
-        value={senhaUsuario}
-        onChangeText={setSenhaUsuario}
-        secureTextEntry // Oculta o texto digitado para senhas.
-      />
-      {carregando ? (
-        <ActivityIndicator size="large" /> // Exibe o indicador de carregamento enquanto o login está em andamento.
-      ) : (
-        <TouchableOpacity
-          style={estilos.botao}
-          onPress={lidarComLogin}
-          // Desabilita o botão se o nome de usuário ou a senha estiverem vazios.
-          disabled={!nomeUsuario || !senhaUsuario}
-        >
-          <Text style={estilos.textoBotao}>Entrar</Text>
-        </TouchableOpacity>
-      )}
-      {mensagemErro ? (
-        <Text style={estilos.mensagemErro}>{mensagemErro}</Text> // Exibe a mensagem de erro, se houver.
-      ) : null}
+      <View style={estilos.formulario}>
+        <Text style={estilos.titulo}>Bem-vindo(a)</Text>
+        <Text style={estilos.subtitulo}>Faça login para continuar</Text>
+
+        <View style={estilos.campoInput}>
+          <Ionicons name="person-outline" size={20} color="#666" style={estilos.iconeInput} />
+          <TextInput
+            style={estilos.input}
+            placeholder="Nome de usuário"
+            value={nomeUsuario}
+            onChangeText={setNomeUsuario}
+            autoCapitalize="none"
+            placeholderTextColor="#666"
+          />
+        </View>
+
+        <View style={estilos.campoInput}>
+          <Ionicons name="lock-closed-outline" size={20} color="#666" style={estilos.iconeInput} />
+          <TextInput
+            style={[estilos.input, { paddingRight: 40 }]}
+            placeholder="Senha"
+            value={senhaUsuario}
+            onChangeText={setSenhaUsuario}
+            secureTextEntry={!mostrarSenha}
+            placeholderTextColor="#666"
+          />
+          <TouchableOpacity
+            style={estilos.botaoOlho}
+            onPress={() => setMostrarSenha(!mostrarSenha)}
+          >
+            <Ionicons
+              name={mostrarSenha ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={estilos.dica}>
+          Credenciais de teste:{"\n"}
+          Usuário: mor_2314{"\n"}
+          Senha: 83r5^_
+        </Text>
+
+        {mensagemErro ? (
+          <Text style={estilos.mensagemErro}>{mensagemErro}</Text>
+        ) : null}
+
+        {carregando ? (
+          <ActivityIndicator size="large" color="#007AFF" style={estilos.carregando} />
+        ) : (
+          <TouchableOpacity
+            style={[
+              estilos.botao,
+              (!nomeUsuario || !senhaUsuario) && estilos.botaoDesabilitado,
+            ]}
+            onPress={lidarComLogin}
+            disabled={!nomeUsuario || !senhaUsuario}
+          >
+            <Text style={estilos.textoBotao}>Entrar</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }
 
+const { width } = Dimensions.get("window");
+
 const estilos = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  titulo: { fontSize: 24, marginBottom: 20 },
-  input: {
-    width: "100%",
-    padding: 10,
+  formulario: {
+    width: width * 0.9,
+    maxWidth: 400,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  subtitulo: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  campoInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 10,
+    borderColor: "#ddd",
+  },
+  iconeInput: {
+    padding: 10,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    fontSize: 16,
+    color: "#333",
+  },
+  botaoOlho: {
+    padding: 10,
+    position: "absolute",
+    right: 0,
+  },
+  dica: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 16,
+    backgroundColor: "#f0f0f0",
+    padding: 12,
+    borderRadius: 8,
+    lineHeight: 20,
   },
   botao: {
-    width: "100%",
+    backgroundColor: "#007AFF",
     padding: 15,
-    backgroundColor: "#007bff", // Cor de fundo do botão.
-    borderRadius: 5,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
   },
-  textoBotao: { color: "#fff", fontSize: 16 }, // Cor do texto do botão.
-  mensagemErro: { marginTop: 15, textAlign: "center", color: "red" }, // Estilo para mensagens de erro.
+  botaoDesabilitado: {
+    backgroundColor: "#ccc",
+  },
+  textoBotao: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  mensagemErro: {
+    color: "#dc3545",
+    textAlign: "center",
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  carregando: {
+    marginTop: 20,
+  },
 });

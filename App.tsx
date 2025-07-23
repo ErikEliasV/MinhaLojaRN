@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Toast from "react-native-toast-message";
 
 import TelaLogin from "./src/telas/TelaLogin";
 import TelaProdutos from "./src/telas/TelaProdutos";
 import TelaDetalhesProduto from "./src/telas/TelaDetalhesProduto"; // Importa a tela de detalhes do produto
+import TelaBuscaProdutos  from "./src/telas/TelaBuscaProdutos";
 import { obterToken, removerToken } from "./src/servicos/servicoArmazenamento";
 import api from "./src/api/axiosConfig";
 
@@ -70,6 +72,11 @@ export default function App() {
               {/* Renderiza a TelaDetalhesProduto. O alerta de tipo não interfere no fucionamento. */}
               {(props) => <TelaDetalhesProduto {...props} />}
             </Pilha.Screen>
+            <Pilha.Screen
+              name="BuscarProdutos"
+              options={{ title: "Buscar Produtos" }}
+              component={TelaBuscaProdutos}
+            />
           </Pilha.Group>
         ) : (
           // Telas acessíveis antes do login (usuário não autenticado).
@@ -86,6 +93,7 @@ export default function App() {
           </Pilha.Group>
         )}
       </Pilha.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 }

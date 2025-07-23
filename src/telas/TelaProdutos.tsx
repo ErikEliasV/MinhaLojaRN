@@ -5,12 +5,14 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   Image,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { obterTodosProdutos } from "../servicos/servicoProdutos";
-import { ProdutoAPI } from "../tipos/api"; // Reutilize a interface
+import { ProdutoAPI } from "../tipos/api";
 import { useNavigation } from "@react-navigation/native";
 
 interface TelaProdutosProps {
@@ -18,12 +20,10 @@ interface TelaProdutosProps {
 }
 
 export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
-  const navegacao = useNavigation(); // Adicione esta linha
+  const navegacao = useNavigation();
   const [listaProdutos, setListaProdutos] = useState<ProdutoAPI[]>([]);
-  const [produtosFiltrados, setProdutosFiltrados] = useState<ProdutoAPI[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
   const [mensagemErro, setMensagemErro] = useState("");
-  const [termoBusca, setTermoBusca] = useState(""); // Estado para o campo de busca
 
   useEffect(() => {
     const carregarProdutos = async () => {
@@ -32,49 +32,41 @@ export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
       try {
         const produtos = await obterTodosProdutos();
         setListaProdutos(produtos);
-        setProdutosFiltrados(produtos); // Inicialmente, a lista filtrada é a lista completa
       } catch (erro: any) {
         setMensagemErro(
           erro.message || "Não foi possível carregar os produtos."
         );
-        // O interceptor do Axios já lida com 401, mas você pode querer um fallback aqui
         if (erro.message.includes("Sessão expirada")) {
-          aoLogout(); // Força o logout se a mensagem indicar sessão expirada
+          aoLogout();
         }
       } finally {
         setCarregandoProdutos(false);
       }
     };
     carregarProdutos();
-  }, [aoLogout]); // aoLogout como dependência para garantir que a função esteja atualizada
+  }, [aoLogout]);
 
-  // Adicione este useEffect dentro do seu componente TelaProdutos
-  useEffect(() => {
-    if (termoBusca === "") {
-      setProdutosFiltrados(listaProdutos);
-    } else {
-      const produtosEncontrados = listaProdutos.filter(
-        (produto) =>
-          produto.title.toLowerCase().includes(termoBusca.toLowerCase()) ||
-          produto.category.toLowerCase().includes(termoBusca.toLowerCase())
-      );
-      setProdutosFiltrados(produtosEncontrados);
-    }
-  }, [termoBusca, listaProdutos]); // Dependências: termoBusca e listaProdutos
-  
   const renderizarItemProduto = ({ item }: { item: ProdutoAPI }) => (
     <TouchableOpacity
       style={estilos.itemProduto}
       onPress={() =>
         navegacao.navigate("DetalhesProduto", { produtoId: item.id })
-        // O alerta acima não interfere no funcionamento da aplicação.
-        // Trata-se apenas de um alerta de tipagem, mas é um código válido para execução.
       }
     >
       <Image source={{ uri: item.image }} style={estilos.imagemProduto} />
       <View style={estilos.detalhesProduto}>
-        <Text style={estilos.tituloProduto}>{item.title}</Text>
-        <Text style={estilos.categoriaProduto}>{item.category}</Text>
+        <Text style={estilos.tituloProduto} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <View style={estilos.infoAdicional}>
+          <Text style={estilos.categoriaProduto}>{item.category}</Text>
+          <View style={estilos.avaliacaoContainer}>
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Text style={estilos.avaliacaoTexto}>
+              {item.rating.rate} ({item.rating.count})
+            </Text>
+          </View>
+        </View>
         <Text style={estilos.precoProduto}>R$ {item.price.toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
@@ -82,88 +74,167 @@ export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
 
   if (carregandoProdutos) {
     return (
-      <View style={estilos.containerCentral}>
-        <ActivityIndicator size="large" />
-        <Text>Carregando produtos...</Text>
-      </View>
+      <SafeAreaView style={estilos.containerCentral}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={estilos.textoCarregando}>Carregando produtos...</Text>
+      </SafeAreaView>
     );
   }
 
   if (mensagemErro) {
     return (
-      <View style={estilos.containerCentral}>
+      <SafeAreaView style={estilos.containerCentral}>
         <Text style={estilos.mensagemErro}>{mensagemErro}</Text>
         <TouchableOpacity style={estilos.botaoLogout} onPress={aoLogout}>
           <Text style={estilos.textoBotao}>Fazer Logout</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={estilos.container}>
+    <SafeAreaView style={estilos.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
       <View style={estilos.cabecalho}>
         <Text style={estilos.tituloPagina}>Produtos</Text>
-        <TouchableOpacity style={estilos.botaoLogout} onPress={aoLogout}>
-          <Text style={estilos.textoBotao}>Sair</Text>
-        </TouchableOpacity>
+        <View style={estilos.acoesCabecalho}>
+          <TouchableOpacity
+            style={estilos.botaoBusca}
+            onPress={() => navegacao.navigate("BuscarProdutos")}
+          >
+            <Ionicons name="search" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={estilos.botaoLogout} onPress={aoLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
       </View>
-      {/* Campo de busca será adicionado no Passo 7 */}
-      <TextInput
-        style={estilos.inputBusca}
-        placeholder="Pesquisar produtos..."
-        value={termoBusca}
-        onChangeText={setTermoBusca}
-      />
       <FlatList
-        data={produtosFiltrados}
+        data={listaProdutos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderizarItemProduto}
         contentContainerStyle={estilos.listaConteudo}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const estilos = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50, paddingHorizontal: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
   containerCentral: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#f5f5f5",
+  },
+  textoCarregando: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
   },
   cabecalho: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-  tituloPagina: { fontSize: 26 },
-  botaoLogout: { paddingVertical: 8, paddingHorizontal: 15, borderRadius: 5 },
-  textoBotao: { fontSize: 14 },
-  inputBusca: {
-    width: "100%",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 15,
+  acoesCabecalho: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  tituloPagina: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  botaoBusca: {
+    padding: 8,
+    marginRight: 8,
+  },
+  botaoLogout: {
+    padding: 8,
+  },
+  listaConteudo: {
+    padding: 16,
   },
   itemProduto: {
     flexDirection: "row",
-    padding: 15,
-    borderWidth: 1,
-    borderColor: "#eee",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 3,
+  },
+  imagemProduto: {
+    width: 100,
+    height: 100,
     borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: "#f0f0f0",
+  },
+  detalhesProduto: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "space-between",
+  },
+  tituloProduto: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  infoAdicional: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  categoriaProduto: {
+    fontSize: 14,
+    color: "#666",
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  avaliacaoContainer: {
+    flexDirection: "row",
     alignItems: "center",
   },
-  imagemProduto: { width: 60, height: 60, borderRadius: 5, marginRight: 15 },
-  detalhesProduto: { flex: 1 },
-  tituloProduto: { fontSize: 16, marginBottom: 5 },
-  categoriaProduto: { fontSize: 12, marginBottom: 5, opacity: 0.7 },
-  precoProduto: { fontSize: 15, fontWeight: "bold" },
-  listaConteudo: { paddingBottom: 20 },
-  mensagemErro: { textAlign: "center", marginBottom: 20 },
+  avaliacaoTexto: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: "#666",
+  },
+  precoProduto: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2E7D32",
+  },
+  mensagemErro: {
+    fontSize: 16,
+    color: "#dc3545",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  textoBotao: {
+    color: "#333",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });
