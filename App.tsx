@@ -43,6 +43,7 @@ export default function App() {
     await removerToken();
     delete api.defaults.headers.common["Authorization"];
     setAutenticado(false);
+    setUsuarioAdmin(false);
   };
 
   if (carregandoInicial) {
@@ -108,7 +109,10 @@ export default function App() {
                 {(props) => (
                   <TelaLogin
                     {...props}
-                    aoLoginSucesso={() => setAutenticado(true)}
+                    aoLoginSucesso={() => {
+                      setAutenticado(true);
+                      setUsuarioAdmin(true);
+                    }}
                   />
                 )}
               </Pilha.Screen>
