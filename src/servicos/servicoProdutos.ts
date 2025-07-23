@@ -27,3 +27,43 @@ export async function obterProdutoPorId(id: number): Promise<ProdutoAPI> {
     throw new Error(erro.message || "Erro ao buscar detalhes do produto.");
   }
 }
+
+export interface NovoProduto {
+  title: string;
+  price: number;
+  description: string;
+  category: string;
+  image: string;
+}
+
+export async function criarProduto(produto: NovoProduto): Promise<ProdutoAPI> {
+  try {
+    const resposta = await api.post<ProdutoAPI>("products", produto);
+    return resposta.data;
+  } catch (erro: any) {
+    throw new Error(erro.message || "Erro ao criar produto.");
+  }
+}
+
+export async function atualizarProduto(id: number, produto: NovoProduto): Promise<ProdutoAPI> {
+  try {
+    const resposta = await api.put<ProdutoAPI>(`products/${id}`, produto);
+    return resposta.data;
+  } catch (erro: any) {
+    if (erro.response && erro.response.status === 404) {
+      throw new Error("Produto não encontrado.");
+    }
+    throw new Error(erro.message || "Erro ao atualizar produto.");
+  }
+}
+
+export async function excluirProduto(id: number): Promise<void> {
+  try {
+    await api.delete(`products/${id}`);
+  } catch (erro: any) {
+    if (erro.response && erro.response.status === 404) {
+      throw new Error("Produto não encontrado.");
+    }
+    throw new Error(erro.message || "Erro ao excluir produto.");
+  }
+}

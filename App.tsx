@@ -6,44 +6,43 @@ import Toast from "react-native-toast-message";
 
 import TelaLogin from "./src/telas/TelaLogin";
 import TelaProdutos from "./src/telas/TelaProdutos";
-import TelaDetalhesProduto from "./src/telas/TelaDetalhesProduto"; // Importa a tela de detalhes do produto
-import TelaBuscaProdutos  from "./src/telas/TelaBuscaProdutos";
+import TelaDetalhesProduto from "./src/telas/TelaDetalhesProduto";
+import TelaBuscaProdutos from "./src/telas/TelaBuscaProdutos";
+import TelaAdminProdutos from "./src/telas/TelaAdminProdutos";
+import TelaFormularioProduto from "./src/telas/TelaFormularioProduto";
 import { obterToken, removerToken } from "./src/servicos/servicoArmazenamento";
 import api from "./src/api/axiosConfig";
 
-const Pilha = createNativeStackNavigator(); // Cria uma instância do Stack Navigator para gerenciar as telas.
+const Pilha = createNativeStackNavigator();
 
 export default function App() {
-  const [autenticado, setAutenticado] = useState<boolean | null>(null); // Estado para controlar a autenticação do usuário (null = verificando, true = autenticado, false = não autenticado).
-  const [carregandoInicial, setCarregandoInicial] = useState(true); // Estado para indicar se a verificação inicial de autenticação está em andamento.
+  const [autenticado, setAutenticado] = useState<boolean | null>(null);
+  const [carregandoInicial, setCarregandoInicial] = useState(true);
+  const [usuarioAdmin, setUsuarioAdmin] = useState(false);
 
   useEffect(() => {
-    // Função assíncrona para verificar o status de autenticação do usuário ao iniciar o aplicativo.
     const verificarAutenticacao = async () => {
-      const token = await obterToken(); // Tenta obter um token de autenticação armazenado.
+      const token = await obterToken();
       if (token) {
-        // Se um token for encontrado, configura o cabeçalho de autorização padrão do Axios.
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        setAutenticado(true); // Define o usuário como autenticado.
+        setAutenticado(true);
+        // Simula verificação de admin - na Fake Store API, vamos considerar todos como admin
+        setUsuarioAdmin(true);
       } else {
-        setAutenticado(false); // Define o usuário como não autenticado se não houver token.
+        setAutenticado(false);
       }
-      setCarregandoInicial(false); // Finaliza o estado de carregamento inicial.
+      setCarregandoInicial(false);
     };
 
-    verificarAutenticacao(); // Chama a função para verificar a autenticação.
-    // O interceptor de resposta já foi configurado em axiosConfig.ts e lida com erros 401 (não autorizado).
-    // Ele removerá o token e notificará sobre a expiração da sessão.
-  }, []); // O array vazio assegura que este efeito seja executado apenas uma vez, no montagem do componente.
+    verificarAutenticacao();
+  }, []);
 
-  // Função para lidar com o processo de logout.
   const lidarComLogout = async () => {
-    await removerToken(); // Remove o token de autenticação do armazenamento local.
-    delete api.defaults.headers.common["Authorization"]; // Remove o token do cabeçalho padrão do Axios.
-    setAutenticado(false); // Atualiza o estado de autenticação para falso, redirecionando para a tela de login.
+    await removerToken();
+    delete api.defaults.headers.common["Authorization"];
+    setAutenticado(false);
   };
 
-  // Exibe um indicador de carregamento enquanto a verificação inicial de autenticação está em andamento.
   if (carregandoInicial) {
     return (
       <View style={estilos.containerCentral}>
@@ -56,33 +55,48 @@ export default function App() {
     <NavigationContainer>
       <Pilha.Navigator screenOptions={{ headerShown: false }}>
         {autenticado ? (
-          // Telas acessíveis após o login (usuário autenticado).
           <Pilha.Group>
             <Pilha.Screen
               name="Produtos"
               options={{ title: "Lista de Produtos" }}
             >
-              {/* Renderiza a TelaProdutos, passando a função lidarComLogout como prop. */}
-              {(props) => <TelaProdutos {...props} aoLogout={lidarComLogout} />}
+              {(props) => (
+                <TelaProdutos
+                  {...props}
+                  aoLogout={lidarComLogout}
+                  usuarioAdmin={usuarioAdmin}
+                />
+              )}
             </Pilha.Screen>
             <Pilha.Screen
               name="DetalhesProduto"
               options={{ title: "Detalhes do Produto" }}
-            >
-              {/* Renderiza a TelaDetalhesProduto. O alerta de tipo não interfere no fucionamento. */}
-              {(props) => <TelaDetalhesProduto {...props} />}
-            </Pilha.Screen>
+              component={TelaDetalhesProduto}
+            />
             <Pilha.Screen
               name="BuscarProdutos"
               options={{ title: "Buscar Produtos" }}
               component={TelaBuscaProdutos}
             />
+            <Pilha.Screen
+              name="AdminProdutos"
+              options={{ title: "Gerenciar Produtos" }}
+              component={TelaAdminProdutos}
+            />
+            <Pilha.Screen
+              name="AdicionarProduto"
+              options={{ title: "Novo Produto" }}
+              component={TelaFormularioProduto}
+            />
+            <Pilha.Screen
+              name="EditarProduto"
+              options={{ title: "Editar Produto" }}
+              component={TelaFormularioProduto}
+            />
           </Pilha.Group>
         ) : (
-          // Telas acessíveis antes do login (usuário não autenticado).
           <Pilha.Group>
             <Pilha.Screen name="Login" options={{ title: "Entrar" }}>
-              {/* Renderiza a TelaLogin, passando uma função para atualizar o estado de autenticação após o login. */}
               {(props) => (
                 <TelaLogin
                   {...props}

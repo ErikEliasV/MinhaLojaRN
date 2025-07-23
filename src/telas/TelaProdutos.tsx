@@ -17,9 +17,10 @@ import { useNavigation } from "@react-navigation/native";
 
 interface TelaProdutosProps {
   aoLogout: () => void;
+  usuarioAdmin: boolean;
 }
 
-export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
+export default function TelaProdutos({ aoLogout, usuarioAdmin }: TelaProdutosProps) {
   const navegacao = useNavigation();
   const [listaProdutos, setListaProdutos] = useState<ProdutoAPI[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
@@ -104,6 +105,14 @@ export default function TelaProdutos({ aoLogout }: TelaProdutosProps) {
           >
             <Ionicons name="search" size={24} color="#333" />
           </TouchableOpacity>
+          {usuarioAdmin && (
+            <TouchableOpacity
+              style={estilos.botaoAdmin}
+              onPress={() => navegacao.navigate("AdminProdutos")}
+            >
+              <Ionicons name="settings-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={estilos.botaoLogout} onPress={aoLogout}>
             <Ionicons name="log-out-outline" size={24} color="#333" />
           </TouchableOpacity>
@@ -129,8 +138,8 @@ const estilos = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
     backgroundColor: "#f5f5f5",
+    padding: 20,
   },
   textoCarregando: {
     marginTop: 10,
@@ -157,6 +166,10 @@ const estilos = StyleSheet.create({
     color: "#333",
   },
   botaoBusca: {
+    padding: 8,
+    marginRight: 8,
+  },
+  botaoAdmin: {
     padding: 8,
     marginRight: 8,
   },
