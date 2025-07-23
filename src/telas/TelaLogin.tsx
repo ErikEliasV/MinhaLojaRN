@@ -83,12 +83,6 @@ export default function TelaLogin({ aoLoginSucesso }: TelaLoginProps) {
           </TouchableOpacity>
         </View>
 
-        <Text style={estilos.dica}>
-          Credenciais de teste:{"\n"}
-          Usuário: mor_2314{"\n"}
-          Senha: 83r5^_
-        </Text>
-
         {mensagemErro ? (
           <Text style={estilos.mensagemErro}>{mensagemErro}</Text>
         ) : null}
@@ -172,16 +166,6 @@ const estilos = StyleSheet.create({
     padding: 10,
     position: "absolute",
     right: 0,
-  },
-  dica: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 16,
-    backgroundColor: "#f0f0f0",
-    padding: 12,
-    borderRadius: 8,
-    lineHeight: 20,
   },
   botao: {
     backgroundColor: "#007AFF",
