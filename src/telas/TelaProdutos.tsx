@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { obterTodosProdutos } from "../servicos/servicoProdutos";
 import { ProdutoAPI } from "../tipos/api";
 import { useNavigation } from "@react-navigation/native";
+import { useCarrinho } from "../contextos/CarrinhoContext";
 
 interface TelaProdutosProps {
   aoLogout: () => void;
@@ -22,6 +23,7 @@ interface TelaProdutosProps {
 
 export default function TelaProdutos({ aoLogout, usuarioAdmin }: TelaProdutosProps) {
   const navegacao = useNavigation();
+  const { estado } = useCarrinho();
   const [listaProdutos, setListaProdutos] = useState<ProdutoAPI[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
   const [mensagemErro, setMensagemErro] = useState("");
@@ -105,6 +107,21 @@ export default function TelaProdutos({ aoLogout, usuarioAdmin }: TelaProdutosPro
           >
             <Ionicons name="search" size={24} color="#333" />
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={estilos.botaoCarrinho}
+            onPress={() => navegacao.navigate("Carrinho")}
+          >
+            <Ionicons name="cart-outline" size={24} color="#333" />
+            {estado.quantidadeTotal > 0 && (
+              <View style={estilos.badgeCarrinho}>
+                <Text style={estilos.textoBadge}>
+                  {estado.quantidadeTotal > 99 ? '99+' : estado.quantidadeTotal}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
           {usuarioAdmin && (
             <TouchableOpacity
               style={estilos.botaoAdmin}
@@ -168,6 +185,27 @@ const estilos = StyleSheet.create({
   botaoBusca: {
     padding: 8,
     marginRight: 8,
+  },
+  botaoCarrinho: {
+    padding: 8,
+    marginRight: 8,
+    position: "relative",
+  },
+  badgeCarrinho: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#dc3545",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textoBadge: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   botaoAdmin: {
     padding: 8,

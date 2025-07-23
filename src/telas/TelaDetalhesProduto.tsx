@@ -13,8 +13,10 @@ import {
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 import { obterProdutoPorId } from "../servicos/servicoProdutos";
 import { ProdutoAPI } from "../tipos/api";
+import { useCarrinho } from "../contextos/CarrinhoContext";
 
 type DetalhesProdutoRotaParametros = {
   produtoId: number;
@@ -23,10 +25,12 @@ type DetalhesProdutoRotaParametros = {
 export default function TelaDetalhesProduto() {
   const rota = useRoute();
   const navegacao = useNavigation();
+  const { adicionarItem } = useCarrinho();
   const { produtoId } = rota.params as DetalhesProdutoRotaParametros;
   const [produto, setProduto] = useState<ProdutoAPI | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [mensagemErro, setMensagemErro] = useState("");
+  const [adicionandoCarrinho, setAdicionandoCarrinho] = useState(false);
 
   useEffect(() => {
     const carregarDetalhesProduto = async () => {
@@ -45,6 +49,34 @@ export default function TelaDetalhesProduto() {
     };
     carregarDetalhesProduto();
   }, [produtoId]);
+
+  const adicionarAoCarrinho = async () => {
+    if (!produto) return;
+    
+    setAdicionandoCarrinho(true);
+    try {
+      adicionarItem({
+        id: produto.id,
+        title: produto.title,
+        price: produto.price,
+        image: produto.image,
+      });
+      
+      Toast.show({
+        type: "success",
+        text1: "Produto adicionado ao carrinho!",
+        text2: produto.title,
+      });
+    } catch (erro) {
+      Toast.show({
+        type: "error",
+        text1: "Erro ao adicionar produto",
+        text2: "Tente novamente",
+      });
+    } finally {
+      setAdicionandoCarrinho(false);
+    }
+  };
 
   if (carregando) {
     return (
@@ -126,8 +158,19 @@ export default function TelaDetalhesProduto() {
             <Text style={estilos.descricao}>{produto.description}</Text>
           </View>
 
-          <TouchableOpacity style={estilos.botaoComprar}>
-            <Text style={estilos.textoBotaoComprar}>Adicionar ao Carrinho</Text>
+          <TouchableOpacity
+            style={[estilos.botaoCarrinho, adicionandoCarrinho && estilos.botaoDesabilitado]}
+            onPress={adicionarAoCarrinho}
+            disabled={adicionandoCarrinho}
+          >
+            {adicionandoCarrinho ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="cart-outline" size={20} color="#fff" />
+                <Text style={estilos.textoBotaoCarrinho}>Adicionar ao Carrinho</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -240,14 +283,20 @@ const estilos = StyleSheet.create({
     lineHeight: 24,
     color: "#666",
   },
-  botaoComprar: {
+  botaoCarrinho: {
     backgroundColor: "#007AFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: "center",
     marginTop: 8,
+    gap: 8,
   },
-  textoBotaoComprar: {
+  botaoDesabilitado: {
+    opacity: 0.7,
+  },
+  textoBotaoCarrinho: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

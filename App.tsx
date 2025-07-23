@@ -10,6 +10,8 @@ import TelaDetalhesProduto from "./src/telas/TelaDetalhesProduto";
 import TelaBuscaProdutos from "./src/telas/TelaBuscaProdutos";
 import TelaAdminProdutos from "./src/telas/TelaAdminProdutos";
 import TelaFormularioProduto from "./src/telas/TelaFormularioProduto";
+import TelaCarrinho from "./src/telas/TelaCarrinho";
+import { CarrinhoProvider } from "./src/contextos/CarrinhoContext";
 import { obterToken, removerToken } from "./src/servicos/servicoArmazenamento";
 import api from "./src/api/axiosConfig";
 
@@ -52,63 +54,70 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Pilha.Navigator screenOptions={{ headerShown: false }}>
-        {autenticado ? (
-          <Pilha.Group>
-            <Pilha.Screen
-              name="Produtos"
-              options={{ title: "Lista de Produtos" }}
-            >
-              {(props) => (
-                <TelaProdutos
-                  {...props}
-                  aoLogout={lidarComLogout}
-                  usuarioAdmin={usuarioAdmin}
-                />
-              )}
-            </Pilha.Screen>
-            <Pilha.Screen
-              name="DetalhesProduto"
-              options={{ title: "Detalhes do Produto" }}
-              component={TelaDetalhesProduto}
-            />
-            <Pilha.Screen
-              name="BuscarProdutos"
-              options={{ title: "Buscar Produtos" }}
-              component={TelaBuscaProdutos}
-            />
-            <Pilha.Screen
-              name="AdminProdutos"
-              options={{ title: "Gerenciar Produtos" }}
-              component={TelaAdminProdutos}
-            />
-            <Pilha.Screen
-              name="AdicionarProduto"
-              options={{ title: "Novo Produto" }}
-              component={TelaFormularioProduto}
-            />
-            <Pilha.Screen
-              name="EditarProduto"
-              options={{ title: "Editar Produto" }}
-              component={TelaFormularioProduto}
-            />
-          </Pilha.Group>
-        ) : (
-          <Pilha.Group>
-            <Pilha.Screen name="Login" options={{ title: "Entrar" }}>
-              {(props) => (
-                <TelaLogin
-                  {...props}
-                  aoLoginSucesso={() => setAutenticado(true)}
-                />
-              )}
-            </Pilha.Screen>
-          </Pilha.Group>
-        )}
-      </Pilha.Navigator>
-      <Toast />
-    </NavigationContainer>
+    <CarrinhoProvider>
+      <NavigationContainer>
+        <Pilha.Navigator screenOptions={{ headerShown: false }}>
+          {autenticado ? (
+            <Pilha.Group>
+              <Pilha.Screen
+                name="Produtos"
+                options={{ title: "Lista de Produtos" }}
+              >
+                {(props) => (
+                  <TelaProdutos
+                    {...props}
+                    aoLogout={lidarComLogout}
+                    usuarioAdmin={usuarioAdmin}
+                  />
+                )}
+              </Pilha.Screen>
+              <Pilha.Screen
+                name="DetalhesProduto"
+                options={{ title: "Detalhes do Produto" }}
+                component={TelaDetalhesProduto}
+              />
+              <Pilha.Screen
+                name="BuscarProdutos"
+                options={{ title: "Buscar Produtos" }}
+                component={TelaBuscaProdutos}
+              />
+              <Pilha.Screen
+                name="AdminProdutos"
+                options={{ title: "Gerenciar Produtos" }}
+                component={TelaAdminProdutos}
+              />
+              <Pilha.Screen
+                name="AdicionarProduto"
+                options={{ title: "Novo Produto" }}
+                component={TelaFormularioProduto}
+              />
+              <Pilha.Screen
+                name="EditarProduto"
+                options={{ title: "Editar Produto" }}
+                component={TelaFormularioProduto}
+              />
+              <Pilha.Screen
+                name="Carrinho"
+                options={{ title: "Carrinho de Compras" }}
+                component={TelaCarrinho}
+              />
+            </Pilha.Group>
+          ) : (
+            <Pilha.Group>
+              <Pilha.Screen name="Login" options={{ title: "Entrar" }}>
+                {(props) => (
+                  <TelaLogin
+                    {...props}
+                    aoLoginSucesso={() => setAutenticado(true)}
+                  />
+                )}
+              </Pilha.Screen>
+            </Pilha.Group>
+          )}
+        </Pilha.Navigator>
+        <Toast />
+      </NavigationContainer>
+    </CarrinhoProvider>
   );
 }
 
